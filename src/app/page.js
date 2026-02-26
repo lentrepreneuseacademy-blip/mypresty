@@ -26,6 +26,7 @@ const personas = [
 ];
 
 const faqs = [
+  { q: 'Comment fonctionnent les 3 mois offerts ?', a: 'Tu crées ton compte, tu configures ton salon, et tu utilises MY PRESTY gratuitement pendant 3 mois. Au bout des 3 mois, ton abonnement passe à 19€/mois. Tu peux annuler avant si tu veux.' },
   { q: 'Je dois installer quelque chose ?', a: 'Non. MY PRESTY fonctionne dans ton navigateur (Safari, Chrome). Rien à télécharger.' },
   { q: 'Mes clientes actuelles, je les perds ?', a: 'Non. C\'est TON lien, TES clientes, TA page. Tes clientes viennent de toi (Instagram, bouche-à-oreille). MY PRESTY ne prend rien.' },
   { q: 'C\'est quoi la différence avec Planity ?', a: 'Planity est un annuaire qui prend une commission. MY PRESTY est ton outil privé. Pas d\'annuaire, pas de commission, pas de concurrence affichée à côté de toi.' },
@@ -59,7 +60,7 @@ export default function Home() {
       <section style={{ padding: '80px 32px 60px', textAlign: 'center', maxWidth: 800, margin: '0 auto' }}>
         <div style={{ display: 'inline-flex', alignItems: 'center', gap: 8, padding: '8px 20px', border: '1px solid #E8E8E4', marginBottom: 32 }}>
           <div style={{ width: 6, height: 6, borderRadius: '50%', background: '#4ADE80' }} />
-          <span style={{ fontFamily: sf, fontSize: 10, letterSpacing: 2.5, textTransform: 'uppercase', color: '#999' }}>Disponible maintenant</span>
+          <span style={{ fontFamily: sf, fontSize: 10, letterSpacing: 2.5, textTransform: 'uppercase', color: '#999' }}>Offre de lancement — 3 mois offerts</span>
         </div>
 
         <h1 style={{ fontFamily: ss, fontSize: 'clamp(36px, 6vw, 64px)', fontWeight: 300, lineHeight: 1.08, marginBottom: 24, letterSpacing: -1 }}>
@@ -76,12 +77,12 @@ export default function Home() {
 
         <div style={{ display: 'flex', gap: 12, justifyContent: 'center', flexWrap: 'wrap', marginBottom: 48 }}>
           <Link href="/inscription" style={{ fontFamily: sf, fontSize: 12, fontWeight: 600, letterSpacing: 2.5, textTransform: 'uppercase', padding: '18px 44px', background: '#1A1A1A', color: '#FFF', textDecoration: 'none' }}>
-            Créer mon espace gratuitement ✦
+            Commencer — 3 mois offerts ✦
           </Link>
         </div>
 
-        <p style={{ fontFamily: sf, fontSize: 11, color: '#CCC', letterSpacing: 1 }}>
-          Inscription en 30 secondes · Pas de CB requise · 3 mois offerts
+        <p style={{ fontFamily: sf, fontSize: 13, color: '#1A1A1A', fontWeight: 600, letterSpacing: 1 }}>
+          🎁 3 mois offerts — Inscription en 30 secondes
         </p>
       </section>
 
@@ -90,7 +91,7 @@ export default function Home() {
         {[
           { value: '19€', label: 'Par mois' },
           { value: '♾️', label: 'Tout illimité' },
-          { value: '30s', label: 'Pour s\'inscrire' },
+          { value: '3 mois', label: 'Offerts' },
           { value: '0€', label: 'Frais cachés' },
         ].map((s, i) => (
           <div key={i} style={{ textAlign: 'center' }}>
@@ -163,10 +164,14 @@ export default function Home() {
           Un seul prix. <em style={{ fontStyle: 'italic', color: '#999' }}>Pas de surprises.</em>
         </h2>
 
-        <div style={{ maxWidth: 420, margin: '0 auto', border: '2px solid #1A1A1A', padding: '40px 32px' }}>
+        <div style={{ maxWidth: 420, margin: '0 auto', border: '2px solid #1A1A1A', padding: '0', overflow: 'hidden' }}>
+          <div style={{ background: '#4ADE80', padding: '12px', textAlign: 'center' }}>
+            <span style={{ fontFamily: sf, fontSize: 12, fontWeight: 700, letterSpacing: 3, textTransform: 'uppercase', color: '#1A1A1A' }}>🎁 3 mois offerts</span>
+          </div>
+          <div style={{ padding: '32px 32px 40px' }}>
           <p style={{ fontFamily: sf, fontSize: 10, letterSpacing: 3, textTransform: 'uppercase', color: '#999', marginBottom: 16 }}>MY PRESTY</p>
           <p style={{ fontFamily: ss, fontSize: 56, fontWeight: 300, marginBottom: 4 }}>19€<span style={{ fontSize: 20, color: '#999' }}>/mois</span></p>
-          <p style={{ fontFamily: sf, fontSize: 12, color: '#999', marginBottom: 28 }}>Sans engagement · Annule quand tu veux</p>
+          <p style={{ fontFamily: sf, fontSize: 12, color: '#999', marginBottom: 28 }}>Gratuit pendant 3 mois · Sans engagement</p>
 
           <div style={{ textAlign: 'left', marginBottom: 28 }}>
             {[
@@ -189,9 +194,10 @@ export default function Home() {
           </div>
 
           <Link href="/inscription" style={{ display: 'block', width: '100%', padding: '16px', background: '#1A1A1A', color: '#FFF', textDecoration: 'none', fontFamily: sf, fontSize: 12, fontWeight: 600, letterSpacing: 2.5, textTransform: 'uppercase', textAlign: 'center' }}>
-            Commencer gratuitement ✦
+            Commencer — 3 mois offerts ✦
           </Link>
-          <p style={{ fontFamily: sf, fontSize: 11, color: '#CCC', marginTop: 12 }}>3 mois offerts pour les premières inscrites</p>
+          <p style={{ fontFamily: sf, fontSize: 11, color: '#999', marginTop: 12 }}>Tu ne paies rien pendant 3 mois. Ensuite 19€/mois.</p>
+          </div>
         </div>
       </section>
 
@@ -216,10 +222,10 @@ export default function Home() {
           Prête à simplifier<br />ton <em style={{ fontStyle: 'italic', color: 'rgba(255,255,255,0.5)' }}>quotidien</em> ?
         </h2>
         <p style={{ fontFamily: sf, fontSize: 14, color: 'rgba(255,255,255,0.4)', fontWeight: 300, marginBottom: 36 }}>
-          Inscription en 30 secondes. Pas de carte bancaire requise.
+          3 mois offerts. Ensuite 19€/mois, sans engagement.
         </p>
         <Link href="/inscription" style={{ display: 'inline-block', padding: '18px 48px', background: '#FFF', color: '#1A1A1A', textDecoration: 'none', fontFamily: sf, fontSize: 12, fontWeight: 600, letterSpacing: 2.5, textTransform: 'uppercase' }}>
-          Créer mon espace ✦
+          Commencer — 3 mois offerts ✦
         </Link>
       </section>
 
