@@ -32,6 +32,7 @@ export default function Dashboard() {
 
   // Stripe states
   const [stripeLoading, setStripeLoading] = useState(false);
+  const [subscription, setSubscription] = useState({ status: 'loading' });
 
   useEffect(() => {
     checkAuth();
@@ -52,6 +53,21 @@ export default function Dashboard() {
       loadData(salons[0].id);
     }
     setLoading(false);
+
+    // Check subscription status
+    if (u?.email) {
+      try {
+        const res = await fetch('/api/stripe/status', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ email: u.email }),
+        });
+        const subData = await res.json();
+        setSubscription(subData);
+      } catch (e) {
+        setSubscription({ status: 'none' });
+      }
+    }
   }
 
   async function loadData(salonId) {
@@ -491,25 +507,56 @@ export default function Dashboard() {
                 <div>
                   <p style={{ fontFamily: sf, fontSize: 11, letterSpacing: 2, textTransform: 'uppercase', opacity: 0.5, marginBottom: 4 }}>Mon abonnement</p>
                   <p style={{ fontFamily: sf, fontSize: 16, fontWeight: 500 }}>MY PRESTY — 19€/mois</p>
-                  <p style={{ fontFamily: sf, fontSize: 12, fontWeight: 300, opacity: 0.5, marginTop: 2 }}>3 mois offerts, puis 19€/mois. Tout illimité.</p>
+                  {subscription.status === 'trial' && subscription.trialEnd && (
+                    <p style={{ fontFamily: sf, fontSize: 12, fontWeight: 300, opacity: 0.7, marginTop: 2 }}>
+                      Essai gratuit jusqu&apos;au {new Date(subscription.trialEnd).toLocaleDateString('fr-FR', { day: 'numeric', month: 'long', year: 'numeric' })}
+                    </p>
+                  )}
+                  {subscription.status === 'active' && (
+                    <p style={{ fontFamily: sf, fontSize: 12, fontWeight: 300, opacity: 0.7, marginTop: 2 }}>
+                      Prochain paiement le {subscription.currentPeriodEnd ? new Date(subscription.currentPeriodEnd).toLocaleDateString('fr-FR', { day: 'numeric', month: 'long', year: 'numeric' }) : '—'}
+                    </p>
+                  )}
+                  {(subscription.status === 'none' || subscription.status === 'loading') && (
+                    <p style={{ fontFamily: sf, fontSize: 12, fontWeight: 300, opacity: 0.5, marginTop: 2 }}>3 mois offerts, puis 19€/mois. Tout illimité.</p>
+                  )}
                 </div>
-                <span style={{ fontFamily: sf, fontSize: 10, padding: '6px 14px', border: '1px solid rgba(74,222,128,0.5)', color: '#4ADE80', letterSpacing: 1.5, textTransform: 'uppercase', flexShrink: 0, alignSelf: isMobile ? 'flex-start' : 'center' }}>Essai gratuit</span>
+                {subscription.status === 'trial' && (
+                  <span style={{ fontFamily: sf, fontSize: 10, padding: '6px 14px', border: '1px solid rgba(74,222,128,0.5)', color: '#4ADE80', letterSpacing: 1.5, textTransform: 'uppercase', flexShrink: 0, alignSelf: isMobile ? 'flex-start' : 'center' }}>✓ Essai gratuit actif</span>
+                )}
+                {subscription.status === 'active' && (
+                  <span style={{ fontFamily: sf, fontSize: 10, padding: '6px 14px', border: '1px solid rgba(74,222,128,0.5)', color: '#4ADE80', letterSpacing: 1.5, textTransform: 'uppercase', flexShrink: 0, alignSelf: isMobile ? 'flex-start' : 'center' }}>✓ Abonnement actif</span>
+                )}
+                {(subscription.status === 'canceled' || subscription.status === 'past_due' || subscription.status === 'unpaid') && (
+                  <span style={{ fontFamily: sf, fontSize: 10, padding: '6px 14px', border: '1px solid rgba(239,68,68,0.5)', color: '#EF4444', letterSpacing: 1.5, textTransform: 'uppercase', flexShrink: 0, alignSelf: isMobile ? 'flex-start' : 'center' }}>
+                    {subscription.status === 'canceled' ? 'Annulé' : 'Paiement échoué'}
+                  </span>
+                )}
+                {(subscription.status === 'none' || subscription.status === 'loading') && (
+                  <span style={{ fontFamily: sf, fontSize: 10, padding: '6px 14px', border: '1px solid rgba(255,255,255,0.2)', color: 'rgba(255,255,255,0.4)', letterSpacing: 1.5, textTransform: 'uppercase', flexShrink: 0, alignSelf: isMobile ? 'flex-start' : 'center' }}>
+                    {subscription.status === 'loading' ? 'Vérification...' : 'Pas d\'abonnement'}
+                  </span>
+                )}
               </div>
               <div style={{ display: 'flex', gap: 10, flexWrap: 'wrap' }}>
-                <button onClick={handleStripeCheckout} disabled={stripeLoading} style={{
-                  padding: '12px 24px', background: '#4ADE80', color: '#1A1A1A', border: 'none',
-                  fontFamily: sf, fontSize: 12, fontWeight: 700, letterSpacing: 2, textTransform: 'uppercase',
-                  cursor: 'pointer', opacity: stripeLoading ? 0.5 : 1,
-                }}>
-                  {stripeLoading ? 'Chargement...' : 'Activer — 3 mois offerts'}
-                </button>
-                <button onClick={handleStripePortal} style={{
-                  padding: '12px 24px', background: 'transparent', color: 'rgba(255,255,255,0.5)',
-                  border: '1px solid rgba(255,255,255,0.2)', fontFamily: sf, fontSize: 11,
-                  letterSpacing: 1.5, textTransform: 'uppercase', cursor: 'pointer',
-                }}>
-                  Gérer mon abonnement
-                </button>
+                {(subscription.status === 'none' || subscription.status === 'canceled') && (
+                  <button onClick={handleStripeCheckout} disabled={stripeLoading} style={{
+                    padding: '12px 24px', background: '#4ADE80', color: '#1A1A1A', border: 'none',
+                    fontFamily: sf, fontSize: 12, fontWeight: 700, letterSpacing: 2, textTransform: 'uppercase',
+                    cursor: 'pointer', opacity: stripeLoading ? 0.5 : 1,
+                  }}>
+                    {stripeLoading ? 'Chargement...' : 'Activer — 3 mois offerts'}
+                  </button>
+                )}
+                {(subscription.status === 'trial' || subscription.status === 'active' || subscription.status === 'past_due') && (
+                  <button onClick={handleStripePortal} style={{
+                    padding: '12px 24px', background: 'rgba(255,255,255,0.1)', color: '#FFF',
+                    border: '1px solid rgba(255,255,255,0.2)', fontFamily: sf, fontSize: 11,
+                    letterSpacing: 1.5, textTransform: 'uppercase', cursor: 'pointer',
+                  }}>
+                    Gérer mon abonnement
+                  </button>
+                )}
               </div>
             </div>
 
