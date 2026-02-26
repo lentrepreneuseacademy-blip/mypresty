@@ -13,7 +13,7 @@ function translateError(msg) {
   if (!msg) return 'Une erreur est survenue.';
   const m = msg.toLowerCase();
   if (m.includes('user already registered')) return 'Cette adresse email est déjà utilisée. Connecte-toi plutôt !';
-  if (m.includes('email rate limit')) return 'Trop de tentatives. Attends quelques minutes avant de réessayer.';
+  if (m.includes('email rate limit') || m.includes('rate limit')) return 'Un email de confirmation a déjà été envoyé. Vérifie ta boîte mail (et tes spams) !';
   if (m.includes('password') && m.includes('6')) return 'Le mot de passe doit contenir au moins 6 caractères.';
   if (m.includes('password') && m.includes('characters')) return 'Le mot de passe doit contenir au moins 6 caractères.';
   if (m.includes('invalid email')) return 'Adresse email invalide.';

@@ -27,6 +27,10 @@ export async function POST(request) {
     return NextResponse.json({ url: session.url });
   } catch (error) {
     console.error('Stripe checkout error:', error);
-    return NextResponse.json({ error: error.message }, { status: 500 });
+    const msg = error.message || '';
+    let frError = msg;
+    if (msg.includes('api key')) frError = 'Clé API Stripe invalide. Vérifie tes variables d\'environnement.';
+    else if (msg.includes('price')) frError = 'Le Price ID Stripe est invalide. Vérifie la variable STRIPE_PRICE_ID.';
+    return NextResponse.json({ error: frError }, { status: 500 });
   }
 }

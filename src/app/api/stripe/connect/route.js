@@ -1,5 +1,16 @@
 import { NextResponse } from 'next/server';
 
+function translateStripeError(msg) {
+  if (!msg) return 'Une erreur est survenue avec Stripe.';
+  const m = msg.toLowerCase();
+  if (m.includes('platform-profile') || m.includes('managing losses')) {
+    return 'Tu dois d\'abord configurer ton profil plateforme Stripe Connect. Va sur dashboard.stripe.com → Connect → Settings → Platform profile, et remplis les informations demandées. Ensuite réessaie.';
+  }
+  if (m.includes('api key')) return 'Clé API Stripe invalide. Vérifie tes variables d\'environnement.';
+  if (m.includes('connect') && m.includes('not enabled')) return 'Stripe Connect n\'est pas activé. Active-le dans ton dashboard Stripe → Connect.';
+  return msg;
+}
+
 export async function POST(request) {
   try {
     const { salon_id, email, salon_name } = await request.json();
@@ -32,6 +43,6 @@ export async function POST(request) {
     return NextResponse.json({ url: accountLink.url, account_id: account.id });
   } catch (error) {
     console.error('Stripe Connect error:', error);
-    return NextResponse.json({ error: error.message }, { status: 500 });
+    return NextResponse.json({ error: translateStripeError(error.message) }, { status: 500 });
   }
 }
