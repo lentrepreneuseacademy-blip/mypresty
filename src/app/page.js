@@ -48,7 +48,7 @@ export default function Home() {
 
       {/* ===== BANDEAU DEFILANT ===== */}
       <div style={{ background: '#1A1A1A', overflow: 'hidden', whiteSpace: 'nowrap', padding: '11px 0' }}>
-        <div style={{ display: 'inline-block', animation: 'marquee 25s linear infinite' }}>
+        <div style={{ display: 'inline-block', animation: 'marquee 50s linear infinite' }}>
           <span style={{ fontFamily: sf, fontSize: 13, fontWeight: 600, letterSpacing: 3, color: '#FFF' }}>
             {marqueeText}{marqueeText}{marqueeText}{marqueeText}
           </span>
