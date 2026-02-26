@@ -48,7 +48,7 @@ export default function Home() {
 
       {/* ===== BANDEAU DEFILANT ===== */}
       <div style={{ background: '#1A1A1A', overflow: 'hidden', whiteSpace: 'nowrap', padding: '11px 0' }}>
-        <div style={{ display: 'inline-block', animation: 'marquee 25s linear infinite' }}>
+        <div style={{ display: 'inline-block', animation: 'marquee 60s linear infinite' }}>
           <span style={{ fontFamily: sf, fontSize: 13, fontWeight: 600, letterSpacing: 3, color: '#FFF' }}>
             {marqueeText}{marqueeText}{marqueeText}{marqueeText}
           </span>
@@ -56,7 +56,7 @@ export default function Home() {
       </div>
 
       {/* ===== HEADER ===== */}
-      <header style={{ padding: '18px 32px', display: 'flex', justifyContent: 'space-between', alignItems: 'center', borderBottom: '1px solid #F0F0EC' }}>
+      <header style={{ padding: '14px 16px', display: 'flex', justifyContent: 'space-between', alignItems: 'center', borderBottom: '1px solid #F0F0EC', flexWrap: 'wrap', gap: 8 }}>
         <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
           <div style={{ width: 40, height: 40, background: '#1A1A1A', borderRadius: 10, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
             <span style={{ color: '#FFF', fontFamily: ss, fontSize: 18, fontWeight: 600 }}>MP</span>
@@ -64,10 +64,10 @@ export default function Home() {
           <span style={{ fontFamily: sf, fontSize: 17, fontWeight: 600, letterSpacing: 5, textTransform: 'uppercase' }}>MY PRESTY</span>
         </div>
         <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
-          <Link href="/connexion" style={{ fontFamily: sf, fontSize: 14, color: '#777', textDecoration: 'none', letterSpacing: 1, padding: '10px 18px' }}>
+          <Link href="/connexion" style={{ fontFamily: sf, fontSize: 13, color: '#777', textDecoration: 'none', padding: '6px 8px' }}>
             Se connecter
           </Link>
-          <Link href="/inscription" style={{ fontFamily: sf, fontSize: 13, fontWeight: 600, letterSpacing: 2, textTransform: 'uppercase', padding: '14px 28px', background: '#1A1A1A', color: '#FFF', textDecoration: 'none' }}>
+          <Link href="/inscription" style={{ fontFamily: sf, fontSize: 11, fontWeight: 600, letterSpacing: 2, textTransform: 'uppercase', padding: '12px 16px', background: '#1A1A1A', color: '#FFF', textDecoration: 'none' }}>
             Commencer
           </Link>
         </div>
