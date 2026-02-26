@@ -424,15 +424,69 @@ export default function Dashboard() {
           <div>
             <h1 style={{ fontFamily: ss, fontSize: 32, fontWeight: 300, marginBottom: 24 }}>Paramètres</h1>
 
-            <div style={{ background: '#1A1A1A', color: '#FFF', padding: '20px 24px', marginBottom: 24, display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-              <div>
-                <p style={{ fontFamily: sf, fontSize: 11, letterSpacing: 2, textTransform: 'uppercase', opacity: 0.5, marginBottom: 4 }}>Mon abonnement</p>
-                <p style={{ fontFamily: sf, fontSize: 16, fontWeight: 500 }}>MY PRESTY — 19€/mois</p>
-                <p style={{ fontFamily: sf, fontSize: 12, fontWeight: 300, opacity: 0.5, marginTop: 2 }}>Tout illimité : équipe, réservations, clients, prestations</p>
+            {/* ABONNEMENT */}
+            <div style={{ background: '#1A1A1A', color: '#FFF', padding: '24px', marginBottom: 16 }}>
+              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 16 }}>
+                <div>
+                  <p style={{ fontFamily: sf, fontSize: 11, letterSpacing: 2, textTransform: 'uppercase', opacity: 0.5, marginBottom: 4 }}>Mon abonnement</p>
+                  <p style={{ fontFamily: sf, fontSize: 16, fontWeight: 500 }}>MY PRESTY — 19€/mois</p>
+                  <p style={{ fontFamily: sf, fontSize: 12, fontWeight: 300, opacity: 0.5, marginTop: 2 }}>3 mois offerts, puis 19€/mois. Tout illimité.</p>
+                </div>
+                <span style={{ fontFamily: sf, fontSize: 10, padding: '6px 14px', border: '1px solid rgba(74,222,128,0.5)', color: '#4ADE80', letterSpacing: 1.5, textTransform: 'uppercase' }}>Essai gratuit</span>
               </div>
-              <span style={{ fontFamily: sf, fontSize: 10, padding: '6px 14px', border: '1px solid rgba(74,222,128,0.5)', color: '#4ADE80', letterSpacing: 1.5, textTransform: 'uppercase' }}>Actif</span>
+              <div style={{ display: 'flex', gap: 10, flexWrap: 'wrap' }}>
+                <button onClick={async () => {
+                  try {
+                    const res = await fetch('/api/stripe/checkout', {
+                      method: 'POST',
+                      headers: { 'Content-Type': 'application/json' },
+                      body: JSON.stringify({ email: user?.email, salon_id: salon.id }),
+                    });
+                    const data = await res.json();
+                    if (data.url) window.location.href = data.url;
+                    else alert(data.error || 'Erreur');
+                  } catch (e) { alert('Erreur de connexion'); }
+                }} style={{ padding: '12px 24px', background: '#4ADE80', color: '#1A1A1A', border: 'none', fontFamily: sf, fontSize: 12, fontWeight: 700, letterSpacing: 2, textTransform: 'uppercase', cursor: 'pointer' }}>
+                  Activer — 3 mois offerts
+                </button>
+                <button onClick={async () => {
+                  try {
+                    const res = await fetch('/api/stripe/portal', {
+                      method: 'POST',
+                      headers: { 'Content-Type': 'application/json' },
+                      body: JSON.stringify({ email: user?.email }),
+                    });
+                    const data = await res.json();
+                    if (data.url) window.location.href = data.url;
+                  } catch (e) {}
+                }} style={{ padding: '12px 24px', background: 'transparent', color: 'rgba(255,255,255,0.5)', border: '1px solid rgba(255,255,255,0.2)', fontFamily: sf, fontSize: 11, letterSpacing: 1.5, textTransform: 'uppercase', cursor: 'pointer' }}>
+                  Gérer mon abonnement
+                </button>
+              </div>
             </div>
 
+            {/* STRIPE CONNECT - RECEVOIR LES PAIEMENTS */}
+            <div style={{ background: '#FFF', border: '1px solid #E8E8E4', padding: '24px', marginBottom: 16 }}>
+              <p style={{ fontFamily: sf, fontSize: 11, letterSpacing: 2, textTransform: 'uppercase', color: '#999', marginBottom: 4 }}>Paiement en ligne</p>
+              <p style={{ fontFamily: sf, fontSize: 16, fontWeight: 500, marginBottom: 4 }}>Recevoir les paiements de tes clientes</p>
+              <p style={{ fontFamily: sf, fontSize: 13, color: '#999', fontWeight: 300, marginBottom: 16 }}>Connecte ton compte Stripe pour recevoir les paiements CB et acomptes directement sur ton compte bancaire.</p>
+              <button onClick={async () => {
+                try {
+                  const res = await fetch('/api/stripe/connect', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ salon_id: salon.id, email: user?.email, salon_name: salon.name }),
+                  });
+                  const data = await res.json();
+                  if (data.url) window.location.href = data.url;
+                  else alert(data.error || 'Erreur');
+                } catch (e) { alert('Erreur de connexion'); }
+              }} style={{ padding: '14px 28px', background: '#635BFF', color: '#FFF', border: 'none', fontFamily: sf, fontSize: 12, fontWeight: 600, letterSpacing: 2, textTransform: 'uppercase', cursor: 'pointer' }}>
+                Connecter Stripe 💳
+              </button>
+            </div>
+
+            {/* LIEN PUBLIC */}
             <div style={{ background: '#FFF', border: '1px solid #E8E8E4', padding: '20px 24px', marginBottom: 12 }}>
               <p style={{ fontFamily: sf, fontSize: 10, letterSpacing: 2, textTransform: 'uppercase', color: '#999', marginBottom: 8 }}>Lien de réservation public</p>
               <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
@@ -441,12 +495,14 @@ export default function Dashboard() {
               </div>
             </div>
 
+            {/* INFOS SALON */}
             <div style={{ background: '#FFF', border: '1px solid #E8E8E4', padding: '20px 24px', marginBottom: 12 }}>
               <p style={{ fontFamily: sf, fontSize: 10, letterSpacing: 2, textTransform: 'uppercase', color: '#999', marginBottom: 8 }}>Informations du salon</p>
               <p style={{ fontFamily: sf, fontSize: 15, fontWeight: 500 }}>{salon.name}</p>
               <p style={{ fontFamily: sf, fontSize: 12, color: '#999', marginTop: 4 }}>{salon.city || 'Ville non définie'} · {salon.phone || 'Téléphone non défini'}</p>
             </div>
 
+            {/* COMPTE */}
             <div style={{ background: '#FFF', border: '1px solid #E8E8E4', padding: '20px 24px' }}>
               <p style={{ fontFamily: sf, fontSize: 10, letterSpacing: 2, textTransform: 'uppercase', color: '#999', marginBottom: 8 }}>Compte</p>
               <p style={{ fontFamily: sf, fontSize: 13, color: '#777' }}>{user?.email}</p>
