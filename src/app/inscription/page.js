@@ -1,6 +1,6 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { supabase } from '@/lib/supabase';
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
@@ -8,14 +8,61 @@ import Link from 'next/link';
 const sf = "'Outfit', sans-serif";
 const ss = "'Cormorant Garamond', 'Georgia', serif";
 
+// Traduction des erreurs Supabase en français
+function translateError(msg) {
+  if (!msg) return 'Une erreur est survenue.';
+  const m = msg.toLowerCase();
+  if (m.includes('user already registered')) return 'Cette adresse email est déjà utilisée. Connecte-toi plutôt !';
+  if (m.includes('email rate limit')) return 'Trop de tentatives. Attends quelques minutes avant de réessayer.';
+  if (m.includes('password') && m.includes('6')) return 'Le mot de passe doit contenir au moins 6 caractères.';
+  if (m.includes('password') && m.includes('characters')) return 'Le mot de passe doit contenir au moins 6 caractères.';
+  if (m.includes('invalid email')) return 'Adresse email invalide.';
+  if (m.includes('signup is disabled')) return 'Les inscriptions sont temporairement désactivées.';
+  if (m.includes('email not confirmed')) return 'Ton email n\'est pas encore confirmé. Vérifie ta boîte mail !';
+  if (m.includes('invalid login')) return 'Email ou mot de passe incorrect.';
+  if (m.includes('too many requests')) return 'Trop de tentatives. Attends un peu avant de réessayer.';
+  if (m.includes('network')) return 'Erreur de connexion. Vérifie ta connexion internet.';
+  if (m.includes('already') && m.includes('exists')) return 'Ce salon existe déjà. Choisis un autre nom.';
+  if (m.includes('duplicate') || m.includes('unique')) return 'Ce nom de salon est déjà pris. Choisis un autre nom.';
+  if (m.includes('violates row-level security')) return 'Erreur de permissions. Reconnecte-toi et réessaie.';
+  return msg;
+}
+
 export default function Inscription() {
   const router = useRouter();
   const [step, setStep] = useState(1);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
   const [form, setForm] = useState({ email: '', password: '', salonName: '', phone: '', city: '' });
+  const [emailSent, setEmailSent] = useState(false);
 
   const update = (field, value) => setForm({ ...form, [field]: value });
+
+  // Vérifie si l'utilisateur revient après avoir confirmé son email
+  useEffect(() => {
+    async function checkUser() {
+      const { data: { user } } = await supabase.auth.getUser();
+      if (user) {
+        const { data: salons } = await supabase.from('salons').select('id').eq('owner_id', user.id).limit(1);
+        if (salons && salons.length > 0) {
+          router.push('/dashboard');
+        } else {
+          setStep(2);
+        }
+      }
+    }
+    checkUser();
+
+    // Écouter les changements d'auth (quand l'utilisateur confirme son email)
+    const { data: { subscription } } = supabase.auth.onAuthStateChange((event, session) => {
+      if (event === 'SIGNED_IN' && session?.user) {
+        setStep(2);
+        setEmailSent(false);
+      }
+    });
+
+    return () => subscription.unsubscribe();
+  }, []);
 
   const handleStep1 = async (e) => {
     e.preventDefault();
@@ -26,17 +73,26 @@ export default function Inscription() {
       const { data, error: authError } = await supabase.auth.signUp({
         email: form.email,
         password: form.password,
+        options: {
+          emailRedirectTo: `${window.location.origin}/inscription`,
+        },
       });
 
       if (authError) {
-        setError(authError.message);
+        setError(translateError(authError.message));
         setLoading(false);
         return;
       }
 
-      setStep(2);
+      // Vérifier si Supabase a créé une session (email confirmation désactivée)
+      if (data.session) {
+        setStep(2);
+      } else {
+        // Email de confirmation envoyé
+        setEmailSent(true);
+      }
     } catch (err) {
-      setError('Une erreur est survenue.');
+      setError('Une erreur est survenue. Réessaie.');
     }
     setLoading(false);
   };
@@ -50,7 +106,7 @@ export default function Inscription() {
       const { data: { user } } = await supabase.auth.getUser();
 
       if (!user) {
-        setError('Session expirée. Reconnecte-toi.');
+        setError('Tu dois d\'abord confirmer ton email. Vérifie ta boîte mail !');
         setLoading(false);
         return;
       }
@@ -70,14 +126,14 @@ export default function Inscription() {
       });
 
       if (salonError) {
-        setError(salonError.message);
+        setError(translateError(salonError.message));
         setLoading(false);
         return;
       }
 
       router.push('/dashboard');
     } catch (err) {
-      setError('Une erreur est survenue.');
+      setError('Une erreur est survenue. Réessaie.');
     }
     setLoading(false);
   };
@@ -115,7 +171,8 @@ export default function Inscription() {
           <div style={{ flex: 1, height: 3, background: step >= 2 ? '#1A1A1A' : '#E8E8E4' }} />
         </div>
 
-        {step === 1 && (
+        {/* ÉTAPE 1 : Email + Mot de passe */}
+        {step === 1 && !emailSent && (
           <form onSubmit={handleStep1}>
             <h1 style={{ fontFamily: ss, fontSize: 30, fontWeight: 300, marginBottom: 8 }}>Crée ton espace</h1>
             <p style={{ fontFamily: sf, fontSize: 13, color: '#999', marginBottom: 28 }}>Étape 1/2 — Ton compte</p>
@@ -134,6 +191,32 @@ export default function Inscription() {
           </form>
         )}
 
+        {/* EMAIL ENVOYÉ — En attente de confirmation */}
+        {step === 1 && emailSent && (
+          <div style={{ textAlign: 'center' }}>
+            <div style={{ width: 64, height: 64, background: '#F0FDF4', borderRadius: '50%', display: 'inline-flex', alignItems: 'center', justifyContent: 'center', marginBottom: 20 }}>
+              <span style={{ fontSize: 28 }}>✉️</span>
+            </div>
+            <h1 style={{ fontFamily: ss, fontSize: 28, fontWeight: 300, marginBottom: 12 }}>Vérifie ta boîte mail !</h1>
+            <p style={{ fontFamily: sf, fontSize: 14, color: '#666', lineHeight: 1.6, marginBottom: 8 }}>
+              Un email a été envoyé à <strong>{form.email}</strong>
+            </p>
+            <p style={{ fontFamily: sf, fontSize: 13, color: '#999', lineHeight: 1.6, marginBottom: 24 }}>
+              Clique sur le lien dans le mail pour activer ton compte.
+              <br />Ensuite, reviens ici pour créer ton salon.
+            </p>
+            <div style={{ background: '#FFFBEB', border: '1px solid #FEF3C7', padding: '14px 18px', marginBottom: 20, textAlign: 'left' }}>
+              <p style={{ fontFamily: sf, fontSize: 12, color: '#92400E' }}>
+                💡 Pense à vérifier tes spams si tu ne vois pas le mail !
+              </p>
+            </div>
+            <button onClick={() => { setEmailSent(false); setError(''); }} style={{ ...btnStyle, background: 'transparent', color: '#999', border: '1px solid #E8E8E4' }}>
+              ← Changer d'email
+            </button>
+          </div>
+        )}
+
+        {/* ÉTAPE 2 : Infos du salon */}
         {step === 2 && (
           <form onSubmit={handleStep2}>
             <h1 style={{ fontFamily: ss, fontSize: 30, fontWeight: 300, marginBottom: 8 }}>Ton salon</h1>

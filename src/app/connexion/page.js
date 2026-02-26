@@ -8,6 +8,20 @@ import Link from 'next/link';
 const sf = "'Outfit', sans-serif";
 const ss = "'Cormorant Garamond', 'Georgia', serif";
 
+// Traduction des erreurs Supabase en français
+function translateError(msg) {
+  if (!msg) return 'Une erreur est survenue.';
+  const m = msg.toLowerCase();
+  if (m.includes('invalid login') || m.includes('invalid_credentials')) return 'Email ou mot de passe incorrect.';
+  if (m.includes('email not confirmed')) return 'Ton email n\'est pas encore confirmé. Vérifie ta boîte mail !';
+  if (m.includes('too many requests')) return 'Trop de tentatives. Attends un peu avant de réessayer.';
+  if (m.includes('network')) return 'Erreur de connexion. Vérifie ta connexion internet.';
+  if (m.includes('invalid email')) return 'Adresse email invalide.';
+  if (m.includes('user not found')) return 'Aucun compte trouvé avec cet email.';
+  if (m.includes('email rate limit')) return 'Trop de tentatives. Attends quelques minutes.';
+  return msg;
+}
+
 export default function Connexion() {
   const router = useRouter();
   const [loading, setLoading] = useState(false);
@@ -27,18 +41,25 @@ export default function Connexion() {
       });
 
       if (authError) {
-        if (authError.message.includes('Invalid login')) {
-          setError('Email ou mot de passe incorrect.');
-        } else {
-          setError(authError.message);
-        }
+        setError(translateError(authError.message));
         setLoading(false);
         return;
       }
 
+      // Vérifier si l'utilisateur a un salon
+      const { data: { user } } = await supabase.auth.getUser();
+      if (user) {
+        const { data: salons } = await supabase.from('salons').select('id').eq('owner_id', user.id).limit(1);
+        if (!salons || salons.length === 0) {
+          // Pas de salon → aller à l'inscription étape 2
+          router.push('/inscription');
+          return;
+        }
+      }
+
       router.push('/dashboard');
     } catch (err) {
-      setError('Une erreur est survenue.');
+      setError('Une erreur est survenue. Réessaie.');
     }
     setLoading(false);
   };
