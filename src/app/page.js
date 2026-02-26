@@ -56,7 +56,7 @@ export default function Home() {
       </div>
 
       {/* ===== HEADER ===== */}
-      <header style={{ padding: '14px 16px', display: 'flex', justifyContent: 'space-between', alignItems: 'center', borderBottom: '1px solid #F0F0EC', flexWrap: 'wrap', gap: 8 }}>
+      <header style={{ padding: '14px 16px', display: 'flex', justifyContent: 'space-between', alignItems: 'center', borderBottom: '1px solid #F0F0EC' }}>
         <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
           <div style={{ width: 40, height: 40, background: '#1A1A1A', borderRadius: 10, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
             <span style={{ color: '#FFF', fontFamily: ss, fontSize: 18, fontWeight: 600 }}>MP</span>
