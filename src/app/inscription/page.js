@@ -117,12 +117,18 @@ export default function Inscription() {
         .replace(/[^a-z0-9]+/g, '-')
         .replace(/^-|-$/g, '');
 
+      const trialStart = new Date().toISOString();
+      const trialEnd = new Date(Date.now() + 90 * 24 * 60 * 60 * 1000).toISOString();
+
       const { error: salonError } = await supabase.from('salons').insert({
         owner_id: user.id,
         name: form.salonName,
         slug: slug,
         phone: form.phone,
         city: form.city,
+        trial_start: trialStart,
+        trial_end: trialEnd,
+        subscription_status: 'trial',
       });
 
       if (salonError) {
