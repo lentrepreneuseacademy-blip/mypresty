@@ -235,7 +235,8 @@ export default function Dashboard() {
   // ═══════ CRUD ═══════
   async function addService(e) {
     e.preventDefault();
-    await supabase.from('services').insert({...newService,salon_id:salon.id});
+    const { error } = await supabase.from('services').insert({name:newService.name,duration:newService.duration,price:newService.price,category:newService.category||null,photo_url:newService.photo_url||null,salon_id:salon.id});
+    if(error){alert('Erreur : '+error.message);return;}
     setNewService({name:'',duration:60,price:0,category:'',photo_url:'',promo_active:false,promo_percent:0,promo_label:''});
     setShowForm(null); loadData(salon.id);
   }
@@ -246,31 +247,36 @@ export default function Dashboard() {
   }
   async function addClient(e) {
     e.preventDefault();
-    await supabase.from('clients').insert({...newClient,salon_id:salon.id});
+    const { error } = await supabase.from('clients').insert({first_name:newClient.first_name,last_name:newClient.last_name,phone:newClient.phone||null,email:newClient.email||null,notes:newClient.notes||null,allergies:newClient.allergies||null,birthday:newClient.birthday||null,salon_id:salon.id});
+    if(error){alert('Erreur : '+error.message);return;}
     setNewClient({first_name:'',last_name:'',phone:'',email:'',notes:'',allergies:'',birthday:''});
     setShowForm(null); loadData(salon.id);
   }
   async function addMember(e) {
     e.preventDefault();
-    await supabase.from('team_members').insert({...newMember,salon_id:salon.id});
+    const { error } = await supabase.from('team_members').insert({name:newMember.name,role:newMember.role||null,commission_percent:newMember.commission_percent||0,target_monthly:newMember.target_monthly||0,color:newMember.color||'#1A1A1A',salon_id:salon.id});
+    if(error){alert('Erreur : '+error.message);return;}
     setNewMember({name:'',role:'',commission_percent:0,target_monthly:0,color:'#1A1A1A'});
     setShowForm(null); loadData(salon.id);
   }
   async function deleteMember(id) { await supabase.from('team_members').delete().eq('id',id); loadData(salon.id); }
   async function sendMessage(e) {
     e.preventDefault();
-    await supabase.from('messages').insert({...newMessage,salon_id:salon.id,target:'all'});
+    const { error:mErr } = await supabase.from('messages').insert({title:newMessage.title,content:newMessage.content,salon_id:salon.id,target:'all'});
+    if(mErr){alert('Erreur : '+mErr.message);return;}
     setNewMessage({title:'',content:''}); setShowForm(null); loadData(salon.id);
   }
   async function addPhoto(e) {
     e.preventDefault();
-    await supabase.from('salon_photos').insert({...newPhoto,salon_id:salon.id});
+    const { error:phErr } = await supabase.from('salon_photos').insert({url:newPhoto.url,caption:newPhoto.caption||null,photo_type:newPhoto.photo_type||'feed',salon_id:salon.id});
+    if(phErr){alert('Erreur : '+phErr.message);return;}
     setNewPhoto({url:'',caption:'',photo_type:'feed'}); setShowForm(null); loadData(salon.id);
   }
   async function deletePhoto(id) { await supabase.from('salon_photos').delete().eq('id',id); loadData(salon.id); }
   async function addProduct(e) {
     e.preventDefault();
-    await supabase.from('products').insert({...newProduct,salon_id:salon.id});
+    const { error:pErr } = await supabase.from('products').insert({name:newProduct.name,brand:newProduct.brand||null,price:newProduct.price||0,stock:newProduct.stock||0,category:newProduct.category||null,salon_id:salon.id});
+    if(pErr){alert('Erreur : '+pErr.message);return;}
     setNewProduct({name:'',brand:'',price:0,stock:0,category:''}); setShowForm(null); loadData(salon.id);
   }
   async function deleteProduct(id) { await supabase.from('products').delete().eq('id',id); loadData(salon.id); }
@@ -284,7 +290,8 @@ export default function Dashboard() {
   async function addGiftCard(e) {
     e.preventDefault();
     const code = 'MP-' + Math.random().toString(36).substring(2,8).toUpperCase();
-    await supabase.from('gift_cards').insert({...newGiftCard, salon_id:salon.id, code, remaining:newGiftCard.amount, sender_name:salon.name, sender_email:''});
+    const { error:gcErr } = await supabase.from('gift_cards').insert({recipient_name:newGiftCard.recipient_name,recipient_email:newGiftCard.recipient_email||null,amount:newGiftCard.amount,remaining:newGiftCard.amount,message:newGiftCard.message||null,code,sender_name:salon.name,salon_id:salon.id});
+    if(gcErr){alert('Erreur : '+gcErr.message);return;}
     setNewGiftCard({recipient_name:'',recipient_email:'',amount:50,message:''}); setShowForm(null); loadData(salon.id);
   }
   async function deleteGiftCard(id) { await supabase.from('gift_cards').delete().eq('id',id); loadData(salon.id); }
@@ -357,11 +364,23 @@ export default function Dashboard() {
   const stars = (n) => '★'.repeat(n) + '☆'.repeat(5-n);
 
   const proTabs = [
-    {id:'accueil',icon:'◉',label:'Accueil'},{id:'prestations',icon:'✦',label:'Presta.'},{id:'clients',icon:'♡',label:'Clients'},{id:'equipe',icon:'◎',label:'Équipe'},
-    {id:'rdv',icon:'▦',label:'RDV'},{id:'avis',icon:'⭐',label:'Avis'},{id:'produits',icon:'📦',label:'Produits'},{id:'forfaits',icon:'🎫',label:'Forfaits'},
-    {id:'parrainage',icon:'👩‍👧',label:'Parrain.'},{id:'com',icon:'✉',label:'Com.'},{id:'ia',icon:'🧠',label:'IA'},
-    {id:'salon',icon:'📷',label:'Salon'},{id:'reglages',icon:'⚙',label:'Régl.'},
+    {id:'accueil',icon:'🏠',label:'Accueil',group:'main'},
+    {id:'rdv',icon:'📅',label:'Rendez-vous',group:'main'},
+    {id:'prestations',icon:'✂️',label:'Prestations',group:'main'},
+    {id:'clients',icon:'👤',label:'Clients',group:'main'},
+    {id:'equipe',icon:'👥',label:'Équipe',group:'main'},
+    {id:'avis',icon:'⭐',label:'Avis',group:'marketing'},
+    {id:'parrainage',icon:'🎁',label:'Parrainage',group:'marketing'},
+    {id:'com',icon:'💬',label:'Messages',group:'marketing'},
+    {id:'produits',icon:'📦',label:'Stock',group:'outils'},
+    {id:'forfaits',icon:'🎫',label:'Forfaits & Cartes',group:'outils'},
+    {id:'ia',icon:'🧠',label:'Assistant IA',group:'outils'},
+    {id:'salon',icon:'📷',label:'Mon salon',group:'config'},
+    {id:'reglages',icon:'⚙️',label:'Réglages',group:'config'},
   ];
+
+  const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
+  const mobileMainTabs = ['accueil','rdv','clients','ia','reglages'];
 
   // ═══════ LOADING ═══════
   if (loading) return (<div style={{minHeight:'100vh',display:'flex',alignItems:'center',justifyContent:'center',background:'#FAFAF8'}}><p style={{fontFamily:sf,color:'#999',letterSpacing:3,textTransform:'uppercase',fontSize:17}}>Chargement...</p></div>);
@@ -378,45 +397,83 @@ export default function Dashboard() {
 
   // ═══════ RENDER ═══════
   return (
-    <div style={{ fontFamily: sf, background: '#FAFAF8', minHeight: '100vh' }}>
-      {/* HEADER */}
-      <header style={{ background: tc, padding: isMobile?'10px 14px':'14px 28px', display:'flex', justifyContent:'space-between', alignItems:'center' }}>
-        <div style={{display:'flex',alignItems:'center',gap:10}}>
-          <div style={{width:28,height:28,border:'1.5px solid #FFF',borderRadius:7,display:'flex',alignItems:'center',justifyContent:'center'}}>
-            <span style={{color:'#FFF',fontFamily:ss,fontSize:17,fontWeight:600}}>{salon.name?.[0]||'P'}</span>
-          </div>
-          <span style={{fontFamily:sf,color:'#FFF',fontSize:16,fontWeight:600,letterSpacing:3}}>MY PRESTY</span>
-        </div>
-        <div style={{display:'flex',alignItems:'center',gap:10}}>
-          <div style={{position:'relative',cursor:'pointer'}} onClick={()=>setShowNotifs(!showNotifs)}>
-            <span style={{fontSize:22}}>🔔</span>
-            {getNotifications().length>0&&<div style={{position:'absolute',top:-4,right:-4,width:16,height:16,borderRadius:'50%',background:'#EF4444',display:'flex',alignItems:'center',justifyContent:'center'}}><span style={{fontFamily:sf,fontSize:13,color:'#FFF',fontWeight:700}}>{getNotifications().length}</span></div>}
+    <div style={{ fontFamily: sf, background: '#FAFAF8', minHeight: '100vh', display:isMobile?'block':'flex' }}>
+
+      {/* ═══ SIDEBAR (desktop) ═══ */}
+      {!isMobile&&<aside style={{width:230,background:'#1A1A1A',minHeight:'100vh',position:'fixed',top:0,left:0,display:'flex',flexDirection:'column',zIndex:50}}>
+        <div style={{padding:'24px 20px 20px'}}>
+          <div style={{display:'flex',alignItems:'center',gap:10,marginBottom:6}}>
+            <div style={{width:32,height:32,border:'1.5px solid rgba(255,255,255,0.3)',borderRadius:8,display:'flex',alignItems:'center',justifyContent:'center'}}>
+              <span style={{color:'#FFF',fontFamily:ss,fontSize:16,fontWeight:600}}>{salon.name?.[0]||'P'}</span>
+            </div>
+            <span style={{fontFamily:sf,color:'#FFF',fontSize:15,fontWeight:600,letterSpacing:2}}>MY PRESTY</span>
           </div>
           {salon.subscription_status==='trial'&&salon.trial_end&&(()=>{
-            const daysLeft=Math.max(0,Math.ceil((new Date(salon.trial_end).getTime()-Date.now())/(1000*60*60*24)));
-            const endDate=new Date(salon.trial_end).toLocaleDateString('fr-FR',{day:'numeric',month:'long'});
-            return <span style={{fontFamily:sf,fontSize:13,color:'#FFF',background:daysLeft>30?'rgba(74,222,128,0.3)':daysLeft>7?'rgba(245,158,11,0.4)':'rgba(239,68,68,0.4)',padding:'5px 14px',borderRadius:20,fontWeight:600}}>✦ Essai en cours jusqu'au {endDate}</span>;
+            const d=Math.max(0,Math.ceil((new Date(salon.trial_end).getTime()-Date.now())/(1000*60*60*24)));
+            return <div style={{background:'rgba(255,255,255,0.08)',padding:'6px 10px',borderRadius:8,marginTop:8}}>
+              <span style={{fontFamily:sf,fontSize:12,color:'rgba(255,255,255,0.5)'}}>✦ Essai · {d}j restants</span>
+            </div>;
           })()}
-          {salon.subscription_status==='active'&&<span style={{fontFamily:sf,fontSize:15,color:'#4ADE80',fontWeight:500}}>✓ Pro</span>}
-          {(!salon.subscription_status||salon.subscription_status==='none')&&<span style={{fontFamily:sf,fontSize:15,color:'#EF4444',fontWeight:500}}>Pas d'abonnement</span>}
-          <span style={{fontFamily:sf,color:'rgba(255,255,255,0.5)',fontSize:15}}>{salon.name}</span>
-          <button onClick={async()=>{await supabase.auth.signOut();router.push('/connexion');}} style={{fontFamily:sf,color:'rgba(255,255,255,0.3)',fontSize:15,background:'none',border:'none',cursor:'pointer'}}>Déco.</button>
         </div>
-      </header>
 
-      {/* NAV */}
-      <nav style={{display:'flex',borderBottom:'1px solid #E8E8E4',background:'#FFF',overflowX:'auto',scrollbarWidth:'none',padding:'0 4px'}}>
-        {proTabs.map(t=>(
-          <button key={t.id} onClick={()=>{setTab(t.id);setSelClient(null);setSelMember(null);setShowForm(null);}} style={{
-            padding:isMobile?'10px 8px':'12px 12px',background:'none',border:'none',
-            borderBottom:tab===t.id?`2px solid ${tc}`:'2px solid transparent',
-            cursor:'pointer',fontFamily:sf,fontSize:isMobile?13:15,fontWeight:tab===t.id?600:400,
-            color:tab===t.id?'#1A1A1A':'#999',letterSpacing:1,textTransform:'uppercase',whiteSpace:'nowrap',flexShrink:0
-          }}>{t.icon} {t.label}</button>
-        ))}
-      </nav>
+        <nav style={{flex:1,overflowY:'auto',padding:'0 10px'}}>
+          {[{g:'main',l:''},{g:'marketing',l:'Marketing'},{g:'outils',l:'Outils'},{g:'config',l:'Configuration'}].map(({g,l})=>(
+            <div key={g}>
+              {l&&<p style={{fontFamily:sf,fontSize:11,letterSpacing:2,textTransform:'uppercase',color:'rgba(255,255,255,0.25)',padding:'16px 12px 6px',margin:0}}>{l}</p>}
+              {proTabs.filter(t=>t.group===g).map(t=>(
+                <button key={t.id} onClick={()=>{setTab(t.id);setSelClient(null);setSelMember(null);setShowForm(null);}} style={{
+                  display:'flex',alignItems:'center',gap:12,width:'100%',padding:'10px 14px',
+                  background:tab===t.id?'rgba(255,255,255,0.12)':'transparent',
+                  border:'none',borderRadius:8,cursor:'pointer',marginBottom:2,transition:'all 0.15s',
+                  color:tab===t.id?'#FFF':'rgba(255,255,255,0.5)',
+                }}>
+                  <span style={{fontSize:18,width:24,textAlign:'center'}}>{t.icon}</span>
+                  <span style={{fontFamily:sf,fontSize:14,fontWeight:tab===t.id?600:400}}>{t.label}</span>
+                </button>
+              ))}
+            </div>
+          ))}
+        </nav>
 
-      <main style={{padding:isMobile?'14px':'24px 32px',maxWidth:960,margin:'0 auto'}}>
+        <div style={{padding:'12px 10px 20px',borderTop:'1px solid rgba(255,255,255,0.06)'}}>
+          <div style={{display:'flex',alignItems:'center',gap:8,padding:'8px 14px'}}>
+            <div style={{width:28,height:28,borderRadius:'50%',background:'rgba(255,255,255,0.1)',display:'flex',alignItems:'center',justifyContent:'center'}}>
+              <span style={{fontFamily:sf,fontSize:12,color:'#FFF'}}>{salon.name?.[0]}</span>
+            </div>
+            <div style={{flex:1,minWidth:0}}>
+              <p style={{fontFamily:sf,fontSize:13,color:'#FFF',fontWeight:500,overflow:'hidden',textOverflow:'ellipsis',whiteSpace:'nowrap',margin:0}}>{salon.name}</p>
+            </div>
+            <button onClick={async()=>{await supabase.auth.signOut();router.push('/connexion');}} style={{fontFamily:sf,color:'rgba(255,255,255,0.3)',fontSize:18,background:'none',border:'none',cursor:'pointer',padding:0}} title="Déconnexion">↗</button>
+          </div>
+        </div>
+      </aside>}
+
+      {/* ═══ MOBILE HEADER ═══ */}
+      {isMobile&&<header style={{background:'#1A1A1A',padding:'12px 16px',display:'flex',justifyContent:'space-between',alignItems:'center',position:'sticky',top:0,zIndex:50}}>
+        <span style={{fontFamily:sf,color:'#FFF',fontSize:14,fontWeight:600,letterSpacing:2}}>MY PRESTY</span>
+        <div style={{display:'flex',alignItems:'center',gap:10}}>
+          <div style={{position:'relative',cursor:'pointer'}} onClick={()=>setShowNotifs(!showNotifs)}>
+            <span style={{fontSize:18}}>🔔</span>
+            {getNotifications().length>0&&<div style={{position:'absolute',top:-4,right:-4,width:14,height:14,borderRadius:'50%',background:'#EF4444',display:'flex',alignItems:'center',justifyContent:'center'}}><span style={{fontFamily:sf,fontSize:9,color:'#FFF',fontWeight:700}}>{getNotifications().length}</span></div>}
+          </div>
+          {salon.subscription_status==='trial'&&salon.trial_end&&(()=>{
+            const d=Math.max(0,Math.ceil((new Date(salon.trial_end).getTime()-Date.now())/(1000*60*60*24)));
+            return <span style={{fontFamily:sf,fontSize:11,color:'#FFF',background:'rgba(255,255,255,0.1)',padding:'3px 10px',borderRadius:12}}>{d}j</span>;
+          })()}
+        </div>
+      </header>}
+
+      {/* ═══ MAIN CONTENT ═══ */}
+      <div style={{marginLeft:isMobile?0:230,flex:1,paddingBottom:isMobile?80:0}}>
+      <main style={{padding:isMobile?'16px':'28px 36px',maxWidth:960,margin:'0 auto'}}>
+
+        {/* DESKTOP NOTIFICATION BELL */}
+        {!isMobile&&<div style={{display:'flex',justifyContent:'flex-end',alignItems:'center',gap:10,marginBottom:10}}>
+          <div style={{position:'relative',cursor:'pointer'}} onClick={()=>setShowNotifs(!showNotifs)}>
+            <span style={{fontSize:20}}>🔔</span>
+            {getNotifications().length>0&&<div style={{position:'absolute',top:-4,right:-4,width:16,height:16,borderRadius:'50%',background:'#EF4444',display:'flex',alignItems:'center',justifyContent:'center'}}><span style={{fontFamily:sf,fontSize:10,color:'#FFF',fontWeight:700}}>{getNotifications().length}</span></div>}
+          </div>
+        </div>}
 
         {/* NOTIFICATIONS */}
         {showNotifs&&<div style={{background:'#FFF',border:'1px solid #E8E8E4',padding:'16px',marginBottom:14,boxShadow:'0 4px 20px rgba(0,0,0,0.08)'}}>
@@ -897,29 +954,27 @@ export default function Dashboard() {
           <div style={{marginTop:24}}>
             <div style={{display:'flex',justifyContent:'space-between',alignItems:'center',marginBottom:10}}>
               <h2 style={{fontFamily:ss,fontSize:28,fontWeight:300}}>🎁 Cartes cadeau</h2>
-              <button onClick={()=>setShowForm(showForm==='giftcard'?null:'giftcard')} style={btn()}>{showForm==='giftcard'?'✕ Fermer':'+ Créer'}</button>
             </div>
-            {showForm==='giftcard'&&<form onSubmit={addGiftCard} style={{...card,background:'#FAFAF8'}}>
-              <p style={sty}>Nouvelle carte cadeau</p>
-              <input required placeholder="Nom du destinataire" value={newGiftCard.recipient_name} onChange={e=>setNewGiftCard({...newGiftCard,recipient_name:e.target.value})} style={inp}/>
-              <input type="email" placeholder="Email du destinataire" value={newGiftCard.recipient_email} onChange={e=>setNewGiftCard({...newGiftCard,recipient_email:e.target.value})} style={inp}/>
-              <input required type="number" placeholder="Montant (€)" value={newGiftCard.amount||''} onChange={e=>setNewGiftCard({...newGiftCard,amount:Number(e.target.value)})} style={inp}/>
-              <input placeholder="Message personnalisé (optionnel)" value={newGiftCard.message} onChange={e=>setNewGiftCard({...newGiftCard,message:e.target.value})} style={inp}/>
-              <button type="submit" style={btn()}>Créer la carte</button>
-            </form>}
-            {giftCards.length===0?<div style={card}><p style={{fontFamily:sf,color:'#999',textAlign:'center',padding:'20px 0'}}>Aucune carte cadeau. Crée ta première carte ! Active-les dans Réglages.</p></div>:
+            <div style={{...card,background:'#FAFAF8',display:'flex',alignItems:'center',gap:12,marginBottom:12}}>
+              <span style={{fontSize:24}}>💡</span>
+              <div>
+                <p style={{fontFamily:sf,fontSize:15,color:'#555'}}>Les clientes achètent les cartes depuis votre page publique</p>
+                <p style={{fontFamily:sf,fontSize:14,color:'#999',marginTop:2}}>Activez-les dans <span onClick={()=>setTab('reglages')} style={{color:tc,cursor:'pointer',fontWeight:600}}>Réglages</span> → mypresty.com/{salon.slug}</p>
+              </div>
+            </div>
+            {giftCards.length===0?<div style={card}><p style={{fontFamily:sf,color:'#999',textAlign:'center',padding:'20px 0'}}>Aucune carte cadeau vendue pour le moment.</p></div>:
             giftCards.map(gc=>(<div key={gc.id} style={{...card,display:'flex',justifyContent:'space-between',alignItems:'center'}}>
               <div>
                 <p style={{fontFamily:sf,fontSize:18,fontWeight:600}}>🎁 {gc.recipient_name||'Sans nom'}</p>
                 <p style={{fontFamily:sf,fontSize:15,color:'#999'}}>Code : <strong style={{color:'#1A1A1A',letterSpacing:1}}>{gc.code}</strong></p>
-                {gc.message&&<p style={{fontFamily:sf,fontSize:15,color:'#777',fontStyle:'italic',marginTop:2}}>"{gc.message}"</p>}
-                {gc.recipient_email&&<p style={{fontFamily:sf,fontSize:15,color:'#999',marginTop:2}}>→ {gc.recipient_email}</p>}
+                {gc.sender_name&&<p style={{fontFamily:sf,fontSize:14,color:'#999',marginTop:2}}>De : {gc.sender_name}</p>}
+                {gc.message&&<p style={{fontFamily:sf,fontSize:14,color:'#777',fontStyle:'italic',marginTop:2}}>"{gc.message}"</p>}
               </div>
               <div style={{textAlign:'right'}}>
                 <p style={{fontFamily:ss,fontSize:28,fontWeight:300}}>{gc.remaining}€</p>
-                {gc.remaining<gc.amount&&<p style={{fontFamily:sf,fontSize:15,color:'#999'}}>sur {gc.amount}€</p>}
+                {gc.remaining<gc.amount&&<p style={{fontFamily:sf,fontSize:14,color:'#999'}}>sur {gc.amount}€</p>}
                 <span style={{fontFamily:sf,fontSize:13,padding:'3px 8px',background:gc.used||gc.remaining<=0?'#FEE2E2':'#DCFCE7',color:gc.used||gc.remaining<=0?'#EF4444':'#166534'}}>{gc.used||gc.remaining<=0?'Utilisée':'Active'}</span>
-                <button onClick={()=>deleteGiftCard(gc.id)} style={{fontFamily:sf,fontSize:15,color:'#EF4444',background:'none',border:'none',cursor:'pointer',marginLeft:8}}>✕</button>
+                <button onClick={()=>deleteGiftCard(gc.id)} style={{fontFamily:sf,fontSize:14,color:'#EF4444',background:'none',border:'none',cursor:'pointer',marginLeft:8}}>✕</button>
               </div>
             </div>))}
           </div>
@@ -1149,6 +1204,44 @@ export default function Dashboard() {
         </div>)}
 
       </main>
+      </div>
+
+      {/* ═══ MOBILE BOTTOM NAV ═══ */}
+      {isMobile&&<nav style={{position:'fixed',bottom:0,left:0,right:0,background:'#FFF',borderTop:'1px solid #E8E8E4',display:'flex',zIndex:50,paddingBottom:'env(safe-area-inset-bottom)'}}>
+        {proTabs.filter(t=>mobileMainTabs.includes(t.id)).map(t=>(
+          <button key={t.id} onClick={()=>{setTab(t.id);setMobileMenuOpen(false);setSelClient(null);setSelMember(null);setShowForm(null);}} style={{
+            flex:1,display:'flex',flexDirection:'column',alignItems:'center',gap:2,
+            padding:'10px 0 8px',border:'none',background:'none',cursor:'pointer',
+            color:tab===t.id?tc:'#BBB',transition:'color 0.15s',
+          }}>
+            <span style={{fontSize:20}}>{t.icon}</span>
+            <span style={{fontFamily:sf,fontSize:10,fontWeight:tab===t.id?600:400}}>{t.label}</span>
+          </button>
+        ))}
+        <button onClick={()=>setMobileMenuOpen(!mobileMenuOpen)} style={{
+          flex:1,display:'flex',flexDirection:'column',alignItems:'center',gap:2,
+          padding:'10px 0 8px',border:'none',background:'none',cursor:'pointer',
+          color:mobileMenuOpen?tc:'#BBB',
+        }}>
+          <span style={{fontSize:20}}>☰</span>
+          <span style={{fontFamily:sf,fontSize:10,fontWeight:mobileMenuOpen?600:400}}>Plus</span>
+        </button>
+      </nav>}
+
+      {/* MOBILE MORE MENU */}
+      {isMobile&&mobileMenuOpen&&<div style={{position:'fixed',bottom:60,left:0,right:0,background:'#FFF',borderTop:'1px solid #E8E8E4',zIndex:49,padding:'12px',maxHeight:'60vh',overflowY:'auto',boxShadow:'0 -8px 30px rgba(0,0,0,0.1)'}}>
+        {proTabs.filter(t=>!mobileMainTabs.includes(t.id)).map(t=>(
+          <button key={t.id} onClick={()=>{setTab(t.id);setMobileMenuOpen(false);setSelClient(null);setSelMember(null);setShowForm(null);}} style={{
+            display:'flex',alignItems:'center',gap:14,width:'100%',padding:'14px 16px',
+            background:tab===t.id?'#F5F5F3':'transparent',border:'none',borderRadius:8,cursor:'pointer',
+            marginBottom:2,
+          }}>
+            <span style={{fontSize:22}}>{t.icon}</span>
+            <span style={{fontFamily:sf,fontSize:16,fontWeight:tab===t.id?600:400,color:tab===t.id?'#1A1A1A':'#777'}}>{t.label}</span>
+          </button>
+        ))}
+      </div>}
+
     </div>
   );
 }

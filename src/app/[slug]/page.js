@@ -21,6 +21,9 @@ export default function PublicBooking({ params }) {
   const [selectedTime, setSelectedTime] = useState('');
   const [clientInfo, setClientInfo] = useState({ name: '', phone: '', email: '' });
   const [submitting, setSubmitting] = useState(false);
+  const [giftCard, setGiftCard] = useState({ sender_name:'', sender_email:'', recipient_name:'', recipient_email:'', amount:50, message:'' });
+  const [giftCardDone, setGiftCardDone] = useState(false);
+  const [giftCardCode, setGiftCardCode] = useState('');
 
   useEffect(() => {
     loadSalon();
@@ -309,6 +312,53 @@ export default function PublicBooking({ params }) {
         )}
 
       </main>
+
+      {/* CARTES CADEAU */}
+      {salon.gift_card_enabled&&<section style={{maxWidth:600,margin:'0 auto',padding:'0 20px 40px'}}>
+        <div style={{borderTop:'1px solid #E8E8E4',paddingTop:32}}>
+          <h2 style={{fontFamily:ss,fontSize:28,fontWeight:300,marginBottom:4,textAlign:'center'}}>🎁 Offrir une carte cadeau</h2>
+          <p style={{fontFamily:sf,fontSize:15,color:'#999',textAlign:'center',marginBottom:20}}>Un cadeau qui fait toujours plaisir</p>
+
+          {giftCardDone?<div style={{background:'#FFF',border:'1px solid #E8E8E4',padding:32,textAlign:'center'}}>
+            <p style={{fontSize:40,marginBottom:12}}>🎉</p>
+            <p style={{fontFamily:sf,fontSize:18,fontWeight:500,marginBottom:8}}>Carte cadeau créée !</p>
+            <p style={{fontFamily:sf,fontSize:22,fontWeight:600,letterSpacing:2,background:'#F5F5F3',padding:'12px 20px',display:'inline-block',marginBottom:12}}>{giftCardCode}</p>
+            <p style={{fontFamily:sf,fontSize:15,color:'#999'}}>Communiquez ce code au destinataire pour l'utiliser chez {salon.name}</p>
+            <button onClick={()=>{setGiftCardDone(false);setGiftCard({sender_name:'',sender_email:'',recipient_name:'',recipient_email:'',amount:50,message:''});}} style={{marginTop:16,padding:'10px 24px',background:'transparent',border:'1px solid #D4D4D4',fontFamily:sf,fontSize:14,letterSpacing:1.5,textTransform:'uppercase',cursor:'pointer'}}>Créer une autre carte</button>
+          </div>:
+          <form onSubmit={async(e)=>{
+            e.preventDefault();
+            const code='MP-'+Math.random().toString(36).substring(2,8).toUpperCase();
+            const { error } = await supabase.from('gift_cards').insert({
+              salon_id:salon.id,code,amount:giftCard.amount,remaining:giftCard.amount,
+              sender_name:giftCard.sender_name,sender_email:giftCard.sender_email||null,
+              recipient_name:giftCard.recipient_name,recipient_email:giftCard.recipient_email||null,
+              message:giftCard.message||null
+            });
+            if(error){alert('Erreur : '+error.message);return;}
+            setGiftCardCode(code);setGiftCardDone(true);
+          }} style={{background:'#FFF',border:'1px solid #E8E8E4',padding:24}}>
+            <p style={{fontFamily:sf,fontSize:13,letterSpacing:2,textTransform:'uppercase',color:'#999',marginBottom:10}}>De la part de</p>
+            <input required placeholder="Votre nom" value={giftCard.sender_name} onChange={e=>setGiftCard({...giftCard,sender_name:e.target.value})} style={{width:'100%',padding:'12px 14px',border:'1px solid #E8E8E4',fontFamily:sf,fontSize:16,marginBottom:8,boxSizing:'border-box',outline:'none'}}/>
+            <input type="email" placeholder="Votre email (optionnel)" value={giftCard.sender_email} onChange={e=>setGiftCard({...giftCard,sender_email:e.target.value})} style={{width:'100%',padding:'12px 14px',border:'1px solid #E8E8E4',fontFamily:sf,fontSize:16,marginBottom:16,boxSizing:'border-box',outline:'none'}}/>
+            <p style={{fontFamily:sf,fontSize:13,letterSpacing:2,textTransform:'uppercase',color:'#999',marginBottom:10}}>Pour</p>
+            <input required placeholder="Nom du destinataire" value={giftCard.recipient_name} onChange={e=>setGiftCard({...giftCard,recipient_name:e.target.value})} style={{width:'100%',padding:'12px 14px',border:'1px solid #E8E8E4',fontFamily:sf,fontSize:16,marginBottom:8,boxSizing:'border-box',outline:'none'}}/>
+            <input type="email" placeholder="Email du destinataire (optionnel)" value={giftCard.recipient_email} onChange={e=>setGiftCard({...giftCard,recipient_email:e.target.value})} style={{width:'100%',padding:'12px 14px',border:'1px solid #E8E8E4',fontFamily:sf,fontSize:16,marginBottom:16,boxSizing:'border-box',outline:'none'}}/>
+            <p style={{fontFamily:sf,fontSize:13,letterSpacing:2,textTransform:'uppercase',color:'#999',marginBottom:10}}>Montant</p>
+            <div style={{display:'flex',gap:8,marginBottom:12,flexWrap:'wrap'}}>
+              {[25,50,75,100,150].map(v=>(
+                <button key={v} type="button" onClick={()=>setGiftCard({...giftCard,amount:v})} style={{
+                  padding:'10px 20px',border:giftCard.amount===v?'2px solid #1A1A1A':'1px solid #E8E8E4',
+                  background:giftCard.amount===v?'#1A1A1A':'#FFF',color:giftCard.amount===v?'#FFF':'#1A1A1A',
+                  fontFamily:sf,fontSize:16,fontWeight:600,cursor:'pointer'
+                }}>{v}€</button>
+              ))}
+            </div>
+            <input placeholder="Message personnalisé (optionnel)" value={giftCard.message} onChange={e=>setGiftCard({...giftCard,message:e.target.value})} style={{width:'100%',padding:'12px 14px',border:'1px solid #E8E8E4',fontFamily:sf,fontSize:16,marginBottom:16,boxSizing:'border-box',outline:'none'}}/>
+            <button type="submit" style={{width:'100%',padding:'14px',background:'#1A1A1A',color:'#FFF',border:'none',fontFamily:sf,fontSize:15,fontWeight:600,letterSpacing:2,textTransform:'uppercase',cursor:'pointer'}}>Offrir {giftCard.amount}€</button>
+          </form>}
+        </div>
+      </section>}
 
       {/* Footer */}
       <footer style={{ textAlign: 'center', padding: '24px 20px', borderTop: '1px solid #E8E8E4', marginTop: 40 }}>
