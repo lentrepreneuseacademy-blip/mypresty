@@ -464,7 +464,7 @@ export default function Dashboard() {
       </header>}
 
       {/* ═══ MAIN CONTENT ═══ */}
-      <div style={{marginLeft:isMobile?0:230,flex:1,paddingBottom:isMobile?80:0}}>
+      <div style={{marginLeft:isMobile?0:230,flex:1,paddingBottom:isMobile?80:0,minHeight:'100vh',overflowY:'auto'}}>
       <main style={{padding:isMobile?'16px':'28px 36px',maxWidth:960,margin:'0 auto'}}>
 
         {/* DESKTOP NOTIFICATION BELL */}
